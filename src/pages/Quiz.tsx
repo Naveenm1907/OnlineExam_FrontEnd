@@ -264,12 +264,7 @@ export default function Quiz() {
   if (!isDeviceAllowed) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-6">
-        <motion.div 
-          className="text-center max-w-lg mx-auto"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center max-w-lg mx-auto">
           <div className="text-8xl mb-6">🖥️</div>
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Device Not Supported</h2>
           <p className="text-lg text-gray-600 mb-4">
@@ -292,7 +287,7 @@ export default function Quiz() {
           >
             Return to Home
           </button>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -300,12 +295,7 @@ export default function Quiz() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <motion.div 
-          className="text-center max-w-md mx-auto px-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center max-w-md mx-auto px-6">
           <div className="relative mb-6">
             <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
             <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-purple-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
@@ -317,7 +307,7 @@ export default function Quiz() {
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }

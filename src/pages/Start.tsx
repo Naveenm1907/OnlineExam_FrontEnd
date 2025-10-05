@@ -1,5 +1,4 @@
 import { Suspense, lazy } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 // Lazy load animated components
@@ -18,12 +17,7 @@ export default function Start() {
 
   return (
     <div className="exam-container min-h-screen flex items-center justify-center p-4 bg-pattern-dots">
-      <motion.div 
-        className="max-w-6xl w-full"
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
+      <div className="max-w-6xl w-full">
         {/* Hero Section */}
         <div className="text-center mb-12">
           {/* Main Title */}
@@ -155,7 +149,7 @@ export default function Start() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

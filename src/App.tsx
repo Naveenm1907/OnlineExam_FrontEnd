@@ -6,26 +6,18 @@ import Results from "./pages/Results";
 
 const pageVariants = {
   initial: { 
-    opacity: 0, 
-    y: 20,
-    scale: 0.98
+    opacity: 0
   },
   in: { 
-    opacity: 1, 
-    y: 0,
-    scale: 1
+    opacity: 1
   },
   out: { 
-    opacity: 0, 
-    y: -20,
-    scale: 0.98
+    opacity: 0
   }
 };
 
 const pageTransition = {
-  type: "tween" as const,
-  ease: "anticipate" as const,
-  duration: 0.4
+  duration: 0.15
 };
 
 function AppContent() {

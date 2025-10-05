@@ -1,12 +1,10 @@
 // src/pages/Results.tsx
-import React, { JSX, useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedArrow from "../components/AnimatedArrow";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faStar,
-  faThumbsUp,
   faTrophy,
   faBook,
   faMedal,
@@ -263,15 +261,10 @@ export default function Results(): JSX.Element {
         </motion.div>
 
         {/* Action Buttons */}
-        <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-        >
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <button
             onClick={() => navigate("/")}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
           >
             <AnimatedArrow size={20} direction="right" />
             <span className="ml-2">Take Another Quiz</span>
@@ -279,12 +272,12 @@ export default function Results(): JSX.Element {
 
           <button
             onClick={() => window.print()}
-            className="px-8 py-4 bg-gray-600 text-white rounded-xl font-semibold text-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
+            className="px-8 py-4 bg-gray-600 text-white rounded-xl font-semibold text-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <FontAwesomeIcon icon={faPrint} />
             <span>Print Results</span>
           </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
