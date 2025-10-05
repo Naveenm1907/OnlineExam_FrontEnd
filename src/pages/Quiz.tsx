@@ -42,7 +42,13 @@ export default function Quiz() {
     checkDeviceSize();
     window.addEventListener('resize', checkDeviceSize);
     
-    return () => window.removeEventListener('resize', checkDeviceSize);
+    return () => {
+      window.removeEventListener('resize', checkDeviceSize);
+      // Exit fullscreen on unmount (when navigating away)
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
   }, []);
 
   // Check fullscreen status and automatically enforce
@@ -63,6 +69,9 @@ export default function Quiz() {
 
   // Auto-request fullscreen and fetch questions
   useEffect(() => {
+    // Only initialize if device is allowed
+    if (!isDeviceAllowed) return;
+
     const initializeQuiz = async () => {
       try {
         setLoading(true);
@@ -99,10 +108,13 @@ export default function Quiz() {
     };
     
     initializeQuiz();
-  }, []);
+  }, [isDeviceAllowed]);
 
   // Timer with visual countdown
   useEffect(() => {
+    // Only run timer if device is allowed and quiz is loaded
+    if (!isDeviceAllowed || loading) return;
+
     const timer = setInterval(() => {
       setTime(prev => {
         if (prev <= 1) {
@@ -113,11 +125,12 @@ export default function Quiz() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isDeviceAllowed, loading]);
 
   // Continuous fullscreen monitoring - automatically enforce every second
   useEffect(() => {
-    if (loading || isSubmitting) return;
+    // Don't run if device not allowed, loading, or submitting
+    if (!isDeviceAllowed || loading || isSubmitting) return;
 
     const fullscreenMonitor = setInterval(async () => {
       if (!document.fullscreenElement) {
@@ -130,10 +143,13 @@ export default function Quiz() {
     }, 1000); // Check and enforce every second
 
     return () => clearInterval(fullscreenMonitor);
-  }, [loading, isSubmitting]);
+  }, [isDeviceAllowed, loading, isSubmitting]);
 
   // Advanced security measures
   useEffect(() => {
+    // Don't run security measures if device not allowed
+    if (!isDeviceAllowed) return;
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         handleViolation();
@@ -198,7 +214,7 @@ export default function Quiz() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [violationCount, loading, isSubmitting]);
+  }, [isDeviceAllowed, violationCount, loading, isSubmitting]);
 
   const handleViolation = useCallback(() => {
     if (violationCount === 0) {
