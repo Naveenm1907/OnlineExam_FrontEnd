@@ -3,6 +3,10 @@ Online Quiz Application
 Overview
 This is a full‑stack quiz application where users can take a timed quiz and see their final score with detailed per‑question feedback.
 
+Repositories
+- Frontend: https://github.com/Naveenm1907/OnlineExam_FrontEnd
+- Backend: https://github.com/Naveenm1907/OnlineExam_BackEnd
+
 Tech Stack
 - Backend: Node.js, Express (serverless‑friendly), in‑memory DB mock (easily swappable to SQLite)
 - Frontend: React, Vite, TypeScript, Tailwind, Framer Motion
@@ -22,7 +26,7 @@ cd backend
 npm install
 npm start
 ```
-This starts the API (default: http://localhost:3000 or per hosting config).
+This starts the API (default: http://localhost:3000).
 
 2) Frontend
 ```
@@ -38,16 +42,16 @@ Running Tests (Backend)
 cd backend
 npm test
 ```
-This runs lightweight Node tests for the scoring utility at `backend/utils/score.js`.
+Runs lightweight Node tests for the scoring utility at `backend/utils/score.js`.
 
 Assumptions & Design Choices
-- Serverless friendly: `backend/db.js` provides an in‑memory mock to avoid native DB dependencies during deployment. It can be replaced with SQLite/`better-sqlite3` by swapping the implementation and seeding a `questions` table.
-- Security UX: Quiz attempts to run in fullscreen and warns on focus/visibility changes; second violation triggers auto‑submission.
-- Simplicity: No auth or persistence of user submissions; focus is on quiz flow and scoring.
-- Caching: Frontend caches questions for a few minutes to reduce API calls.
+- Serverless friendly: `backend/db.js` provides an in‑memory mock to avoid native DB dependencies. Swap with SQLite/`better-sqlite3` and seed a `questions` table if needed.
+- Security UX: Quiz tries fullscreen; first violation shows a warning, second auto‑submits.
+- Simplicity: No auth or persistence of submissions; focus is on quiz flow and scoring.
+- Caching: Frontend caches questions briefly to reduce API calls.
 
 Future Improvements
 - Replace mock DB with SQLite and a seed script.
-- Add E2E tests (Playwright) for the full quiz flow.
-- Add categories/multiple quizzes and basic auth.
+- E2E tests (Playwright) for the full quiz flow.
+- Multiple quizzes/categories and basic auth.
 
