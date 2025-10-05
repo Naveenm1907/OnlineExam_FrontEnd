@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Suspense, lazy } from "react";
+import { useEffect, useState, useCallback, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchQuestions, submitAnswers } from "../api";
@@ -23,20 +23,41 @@ export default function Quiz() {
   const [showWarning, setShowWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
+  const [isDeviceAllowed, setIsDeviceAllowed] = useState(true);
   const navigate = useNavigate();
 
-  // Check fullscreen status
-  const checkFullscreenStatus = () => {
+  // Check device screen size (must be larger devices only)
+  useEffect(() => {
+    const checkDeviceSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      // Minimum dimensions: 1024px width (typical tablet landscape minimum)
+      if (width < 1024 || height < 600) {
+        setIsDeviceAllowed(false);
+      } else {
+        setIsDeviceAllowed(true);
+      }
+    };
+
+    checkDeviceSize();
+    window.addEventListener('resize', checkDeviceSize);
+    
+    return () => window.removeEventListener('resize', checkDeviceSize);
+  }, []);
+
+  // Check fullscreen status and automatically enforce
+  const checkFullscreenStatus = async () => {
     const fullscreenElement = document.fullscreenElement;
     const isCurrentlyFullscreen = !!fullscreenElement;
     setIsFullscreen(isCurrentlyFullscreen);
     
-    // Show warning if not in fullscreen after a delay
-    if (!isCurrentlyFullscreen && !loading) {
-      setTimeout(() => {
-        setShowFullscreenWarning(true);
-      }, 2000); // Show warning after 2 seconds
+    // If not in fullscreen and quiz is active, automatically force fullscreen
+    if (!isCurrentlyFullscreen && !loading && !isSubmitting) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (error) {
+        console.warn("Auto fullscreen enforcement failed:", error);
+      }
     }
   };
 
@@ -94,6 +115,23 @@ export default function Quiz() {
     return () => clearInterval(timer);
   }, []);
 
+  // Continuous fullscreen monitoring - automatically enforce every second
+  useEffect(() => {
+    if (loading || isSubmitting) return;
+
+    const fullscreenMonitor = setInterval(async () => {
+      if (!document.fullscreenElement) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (error) {
+          console.warn("Fullscreen enforcement failed:", error);
+        }
+      }
+    }, 1000); // Check and enforce every second
+
+    return () => clearInterval(fullscreenMonitor);
+  }, [loading, isSubmitting]);
+
   // Advanced security measures
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -106,13 +144,20 @@ export default function Quiz() {
       handleViolation();
     };
 
-    const handleFullscreenChange = () => {
+    const handleFullscreenChange = async () => {
       // Update fullscreen status
-      checkFullscreenStatus();
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
       
-      // Check if we're not in fullscreen mode and the change wasn't triggered by the user clicking the warning
-      if (!document.fullscreenElement && !showWarning) {
+      // If exited fullscreen, automatically force it back immediately
+      if (!isCurrentlyFullscreen && !loading && !isSubmitting) {
         handleViolation();
+        // Force back to fullscreen immediately
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (error) {
+          console.warn("Failed to re-enter fullscreen:", error);
+        }
       }
     };
 
@@ -125,6 +170,10 @@ export default function Quiz() {
       if (e.key === 'F11') {
         e.preventDefault();
         handleViolation();
+      }
+      // Block Escape key to prevent fullscreen exit
+      if (e.key === 'Escape') {
+        e.preventDefault();
       }
     };
 
@@ -149,17 +198,19 @@ export default function Quiz() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [violationCount]);
+  }, [violationCount, loading, isSubmitting]);
 
   const handleViolation = useCallback(() => {
     if (violationCount === 0) {
       setViolationCount(1);
       setShowWarning(true);
+      // Show warning briefly, system will auto-enforce fullscreen
       setTimeout(() => {
         setShowWarning(false);
-        setViolationCount(0); // Reset violation count after warning is dismissed
-      }, 3000);
+        setViolationCount(0); // Reset after warning
+      }, 2000);
     } else {
+      // Second violation - auto submit
       handleSubmit();
     }
   }, [violationCount]);
@@ -192,6 +243,43 @@ export default function Quiz() {
     if (time <= 60) return "text-orange-500";
     return "text-gray-600";
   };
+
+  // Device size restriction screen
+  if (!isDeviceAllowed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-6">
+        <motion.div 
+          className="text-center max-w-lg mx-auto"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="text-8xl mb-6">🖥️</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Device Not Supported</h2>
+          <p className="text-lg text-gray-600 mb-4">
+            This exam requires a larger screen device for the best experience and proper monitoring.
+          </p>
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-6">
+            <p className="text-sm text-gray-700 font-medium mb-2">Minimum Requirements:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Screen width: 1024px or larger</li>
+              <li>• Screen height: 600px or larger</li>
+              <li>• Desktop, laptop, or large tablet in landscape mode</li>
+            </ul>
+          </div>
+          <p className="text-gray-600">
+            Please switch to a desktop or laptop computer to take this exam.
+          </p>
+          <button 
+            onClick={() => navigate("/")}
+            className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Return to Home
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -454,83 +542,24 @@ export default function Quiz() {
               className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl"
             >
               <div className="text-6xl mb-4">⚠️</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">Security Warning</h3>
-              <p className="text-gray-600 mb-6">
-                You've attempted to leave the exam environment. This is your first warning. 
-                Any further attempts will result in automatic submission.
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">Security Violation Detected</h3>
+              <p className="text-gray-600 mb-4">
+                You attempted to leave the exam environment. 
               </p>
-              <div className="space-y-3">
-                <button
-                  onClick={async () => {
-                    setShowWarning(false);
-                    try {
-                      await document.documentElement.requestFullscreen();
-                    } catch (error) {
-                      console.log("Fullscreen request failed:", error);
-                    }
-                  }}
-                  className="px-8 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors mr-3"
-                >
-                  Return to Fullscreen
-                </button>
-                <button
-                  onClick={() => setShowWarning(false)}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors"
-                >
-                  Continue Anyway
-                </button>
+              <div className="flex items-center justify-center mb-3">
+                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
               </div>
+              <p className="text-sm font-semibold text-red-600 mb-2">
+                Automatically returning to fullscreen mode...
+              </p>
+              <p className="text-xs text-gray-500">
+                Warning: Any further violations will result in immediate submission.
+              </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Fullscreen Warning Modal */}
-      <AnimatePresence>
-        {showFullscreenWarning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl"
-            >
-              <div className="text-6xl mb-4">⚠️</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">Not in Fullscreen Mode</h3>
-              <p className="text-gray-600 mb-6">
-                You're currently taking the exam in windowed mode. For the best experience and security, 
-                we recommend entering fullscreen mode.
-              </p>
-              <div className="space-y-3">
-                <button
-                  onClick={async () => {
-                    try {
-                      await document.documentElement.requestFullscreen();
-                      setShowFullscreenWarning(false);
-                    } catch (error) {
-                      console.log("Fullscreen request failed:", error);
-                    }
-                  }}
-                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors mr-3"
-                >
-                  Enter Fullscreen
-                </button>
-                <button
-                  onClick={() => setShowFullscreenWarning(false)}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors"
-                >
-                  Continue in Windowed Mode
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
