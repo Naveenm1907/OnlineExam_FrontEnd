@@ -282,7 +282,14 @@ export default function Quiz() {
             Please switch to a desktop or laptop computer to take this exam.
           </p>
           <button 
-            onClick={() => navigate("/")}
+            onClick={() => {
+              // Exit fullscreen before navigating
+              if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+              }
+              // Use replace to avoid navigation stack issues
+              navigate("/", { replace: true });
+            }}
             className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Return to Home
