@@ -23,27 +23,11 @@ export default function Quiz() {
   const [showWarning, setShowWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDeviceAllowed, setIsDeviceAllowed] = useState(true);
   const navigate = useNavigate();
 
-  // Check device screen size (must be larger devices only)
+  // Cleanup on unmount
   useEffect(() => {
-    const checkDeviceSize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      // Minimum dimensions: 1024px width (typical tablet landscape minimum)
-      if (width < 1024 || height < 600) {
-        setIsDeviceAllowed(false);
-      } else {
-        setIsDeviceAllowed(true);
-      }
-    };
-
-    checkDeviceSize();
-    window.addEventListener('resize', checkDeviceSize);
-    
     return () => {
-      window.removeEventListener('resize', checkDeviceSize);
       // Exit fullscreen on unmount (when navigating away)
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
@@ -69,9 +53,6 @@ export default function Quiz() {
 
   // Auto-request fullscreen and fetch questions
   useEffect(() => {
-    // Only initialize if device is allowed
-    if (!isDeviceAllowed) return;
-
     const initializeQuiz = async () => {
       try {
         setLoading(true);
@@ -108,12 +89,12 @@ export default function Quiz() {
     };
     
     initializeQuiz();
-  }, [isDeviceAllowed]);
+  }, []);
 
   // Timer with visual countdown
   useEffect(() => {
-    // Only run timer if device is allowed and quiz is loaded
-    if (!isDeviceAllowed || loading) return;
+    // Only run timer if quiz is loaded
+    if (loading) return;
 
     const timer = setInterval(() => {
       setTime(prev => {
@@ -125,12 +106,12 @@ export default function Quiz() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [isDeviceAllowed, loading]);
+  }, [loading]);
 
   // Continuous fullscreen monitoring - automatically enforce every second
   useEffect(() => {
-    // Don't run if device not allowed, loading, or submitting
-    if (!isDeviceAllowed || loading || isSubmitting) return;
+    // Don't run if loading or submitting
+    if (loading || isSubmitting) return;
 
     const fullscreenMonitor = setInterval(async () => {
       if (!document.fullscreenElement) {
@@ -143,13 +124,10 @@ export default function Quiz() {
     }, 1000); // Check and enforce every second
 
     return () => clearInterval(fullscreenMonitor);
-  }, [isDeviceAllowed, loading, isSubmitting]);
+  }, [loading, isSubmitting]);
 
   // Advanced security measures
   useEffect(() => {
-    // Don't run security measures if device not allowed
-    if (!isDeviceAllowed) return;
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
         handleViolation();
@@ -214,7 +192,7 @@ export default function Quiz() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [isDeviceAllowed, violationCount, loading, isSubmitting]);
+  }, [violationCount, loading, isSubmitting]);
 
   const handleViolation = useCallback(() => {
     if (violationCount === 0) {
@@ -259,45 +237,6 @@ export default function Quiz() {
     if (time <= 60) return "text-orange-500";
     return "text-gray-600";
   };
-
-  // Device size restriction screen
-  if (!isDeviceAllowed) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-6">
-        <div className="text-center max-w-lg mx-auto">
-          <div className="text-8xl mb-6">🖥️</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Device Not Supported</h2>
-          <p className="text-lg text-gray-600 mb-4">
-            This exam requires a larger screen device for the best experience and proper monitoring.
-          </p>
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-6">
-            <p className="text-sm text-gray-700 font-medium mb-2">Minimum Requirements:</p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Screen width: 1024px or larger</li>
-              <li>• Screen height: 600px or larger</li>
-              <li>• Desktop, laptop, or large tablet in landscape mode</li>
-            </ul>
-          </div>
-          <p className="text-gray-600">
-            Please switch to a desktop or laptop computer to take this exam.
-          </p>
-          <button 
-            onClick={() => {
-              // Exit fullscreen before navigating
-              if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => {});
-              }
-              // Use replace to avoid navigation stack issues
-              navigate("/", { replace: true });
-            }}
-            className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Lazy load animated components
@@ -9,11 +9,57 @@ const AnimatedArrow = lazy(() => import("../components/AnimatedArrow"));
 
 export default function Start() {
   const navigate = useNavigate();
+  const [isDeviceAllowed, setIsDeviceAllowed] = useState(true);
+
+  // Check device screen size (must be larger devices only)
+  useEffect(() => {
+    const checkDeviceSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      // Minimum dimensions: 1024px width (typical tablet landscape minimum)
+      if (width < 1024 || height < 600) {
+        setIsDeviceAllowed(false);
+      } else {
+        setIsDeviceAllowed(true);
+      }
+    };
+
+    checkDeviceSize();
+    window.addEventListener('resize', checkDeviceSize);
+    
+    return () => window.removeEventListener('resize', checkDeviceSize);
+  }, []);
 
   const startQuiz = () => {
     // Navigate to quiz - fullscreen will be handled automatically in Quiz component
     navigate("/quiz");
   };
+
+  // Device size restriction screen
+  if (!isDeviceAllowed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-6">
+        <div className="text-center max-w-lg mx-auto">
+          <div className="text-8xl mb-6">🖥️</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Device Not Supported</h2>
+          <p className="text-lg text-gray-600 mb-4">
+            This exam requires a larger screen device for the best experience and proper monitoring.
+          </p>
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 mb-6">
+            <p className="text-sm text-gray-700 font-medium mb-2">Minimum Requirements:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Screen width: 1024px or larger</li>
+              <li>• Screen height: 600px or larger</li>
+              <li>• Desktop, laptop, or large tablet in landscape mode</li>
+            </ul>
+          </div>
+          <p className="text-gray-600">
+            Please switch to a desktop or laptop computer to access this exam.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="exam-container min-h-screen flex items-center justify-center p-4 bg-pattern-dots">
