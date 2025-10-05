@@ -30,18 +30,7 @@ export default function Start() {
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          {/* Floating Icon */}
-          <motion.div 
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6 animate-float"
-            style={{
-              background: 'linear-gradient(135deg, var(--primary-warm), var(--accent-gold))',
-              boxShadow: 'var(--shadow-glow)'
-            }}
-          >
-            <span className="text-2xl">🧠</span>
-          </motion.div>
-          
+        >  
           {/* Main Title */}
           <motion.h1 
             className="text-5xl font-display gradient-text-warm mb-4 text-shadow-soft"
